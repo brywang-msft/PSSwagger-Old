@@ -23,7 +23,7 @@
 Microsoft.PowerShell.Core\Set-StrictMode -Version Latest
 
 # Load Helper module and required DLLs
-if (`$null -eq (Import-Module "`$PSScriptRoot\Generated.Azure.Common.Helpers\Generated.Azure.Common.Helpers.psd1" -PassThru)) {
+if (`$null -eq (Import-Module "`$PSScriptRoot\Generated.Azure.Common.Helpers" -PassThru)) {
     throw "Required module is missing: Generated.Azure.Common.Helpers"
 }
 
