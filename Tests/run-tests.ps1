@@ -116,7 +116,6 @@ if (-not (Test-Path $nodeExePath)) {
 Write-Verbose -Message "Executing: $executeTestsCommand"
 $executeTestsCommand | Out-File pesterCommand.ps1
 
-# TODO: Run PowerShell Core if testframework is core CLR - See issues/15
 if ($TestFramework -eq "netstandard1.7") {
     try {
         $null = Get-WmiObject Win32_OperatingSystem
