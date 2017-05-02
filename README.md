@@ -99,7 +99,12 @@ To enable Microsoft.Rest.ServiceClientTracing support, you must:
 
 To register the PowerShell tracer included in the PSSwagger.Common.Helpers module, run:
 ```powershell
+# Register the tracer
 Register-PSSwaggerClientTracing -TracerObject (New-PSSwaggerClientTracing)
+# Enable client tracing (this happens automatically in Microsoft Azure modules)
+[Microsoft.Rest.ServiceClientTracing]::IsEnabled = $true
+# Enable verbose logging globally within the current PowerShell session
+$VerbosePreference = "continue"
 ```
 The included PowerShell tracer uses Write-Verbose to write tracing messages. To see these messages, you must set $VerbosePreference, as passing in the -Verbose flag to the cmdlet won't carry over to the tracing client.
 
