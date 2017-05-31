@@ -569,7 +569,7 @@ function New-SwaggerPath
                             Parameter = $credentialParameter
                             Add = $true
                         }
-                        $authFunctionCall = 'PSSwagger.Common.Helpers\Get-BasicAuthCredentials -Credential $Credential'
+                        $authFunctionCall = 'PSSwagger.Common.Helpers\Get-PSBasicAuthCredentials -Credential $Credential'
                     } elseif ($type -eq 'apiKey') {
                         if (-not (Get-Member -InputObject $securityDefinition -Name "name")) {
                             throw ($LocalizedData.SecurityDefinitionMissingName -f ($firstSecurityObject.Name))
@@ -602,7 +602,7 @@ function New-SwaggerPath
                             Parameter = $credentialParameter
                             Add = $true
                         }
-                        $authFunctionCall = "PSSwagger.Common.Helpers\Get-ApiKeyCredentials -APIKey `$APIKey -In '$in' -Name '$name'"
+                        $authFunctionCall = "PSSwagger.Common.Helpers\Get-PSApiKeyCredentials -APIKey `$APIKey -In '$in' -Name '$name'"
                     } else {
                         Write-Warning -Message ($LocalizedData.UnsupportedAuthenticationType -f ($type))
                     }
@@ -613,7 +613,7 @@ function New-SwaggerPath
 
     if (-not $authFunctionCall) {
         # At this point, there was no supported security object or overridden auth function, so assume no auth
-        $authFunctionCall = 'PSSwagger.Common.Helpers\Get-EmptyAuthCredentials'
+        $authFunctionCall = 'PSSwagger.Common.Helpers\Get-PSEmptyAuthCredentials'
     }
 
     $nonUniqueParameterSets = @()
@@ -657,7 +657,7 @@ function New-SwaggerPath
             foreach ($additionalParameter in $securityParametersToAdd) {
                 if ($parameterDetails.Name -eq $additionalParameter.Parameter.Details.Name) {
                     $additionalParameter.Add = $false
-                    Write-Warning -Message ($LocalizedData.ParameterConflictAndResult -f ($additionalParameter.Parameter.Details.Name, $commandName, $parameterSetDetail.OperationId, $LocalizedData.CredentialParameterNotSupported))
+                    Write-Warning -Message ($LocalizedData.ParameterConflictAndResult -f ($additionalParameter.Parameter.Details.Name, $commandName, $parameterSetDetail.OperationId, $LocalizedData.SecurityParameterNotSupported))
                 }
             }
             

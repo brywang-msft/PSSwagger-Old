@@ -732,6 +732,7 @@
             string pwd = String.Empty;
             try
             {
+                // Find and use MarshalToString as SecureStringToBSTR isn't available in core
                 System.Reflection.MethodInfo[] mi = typeof(SecureString).GetMethods(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                 foreach (var method in mi)
                 {

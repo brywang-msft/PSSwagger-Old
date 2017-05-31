@@ -30,14 +30,13 @@ namespace Microsoft.PowerShell.Commands.PSSwagger
         {
             int passwordLength = this.Password.Length;
             int userNameLength = this.UserName.Length;
+            // totalCredsLength is the number of bytes we'll eventually encode
             int totalCredsLength = passwordLength + userNameLength + 1;
             int base64size = Base64Encoder.PredictSize(totalCredsLength);
             byte[] userNameBytes = Encoding.UTF8.GetBytes(this.UserName);
             // This array ensures we clean up the string concatenation of "username:password"
             byte[] clientCredsArr = new byte[totalCredsLength];
             // And here we need to clean up the base64 encoded string
-            // 3 bytes == 4 characters, + padding
-            // totalCredsLength is the number of bytes we'll eventually encode
             char[] base64string = new char[base64size];
             GCHandle byteHandle = new GCHandle();
             GCHandle strHandle = new GCHandle();
@@ -69,12 +68,16 @@ namespace Microsoft.PowerShell.Commands.PSSwagger
                         {
                             char* pTempPassword = (char*)pBstr;
                             byte* pClientCreds = (byte*)byteHandle.AddrOfPinnedObject();
+                            // Copy the password byte-by-byte
                             Encoding.UTF8.GetBytes(pTempPassword, passwordLength, pClientCreds + userNameLength + 1, passwordLength);
                             for (int i = 0; i < userNameLength; i++)
                             {
+                                // Copy the username bytes
                                 pClientCreds[i] = userNameBytes[i];
                             }
+                            // Finally add the ':' separator in the basic auth protocol
                             pClientCreds[userNameLength] = (byte)':';
+                            // And do a byte-by-byte encoding instead of Convert.ToBase64String to prevent additional strings
                             Base64Encoder.Encode(clientCredsArr, base64string);
                         }
                     },
@@ -87,7 +90,6 @@ namespace Microsoft.PowerShell.Commands.PSSwagger
                     }, null);
 
                 // Not using BasicAuthenticationCredentials here because: 1) async, 2) need to have the handle to the pinned base64 encoded string
-                // NOTE: URL safe encoding?
                 request.Headers.Authorization = new AuthenticationHeaderValue("Basic", new string(base64string));
             }, delegate
             {
@@ -102,7 +104,12 @@ namespace Microsoft.PowerShell.Commands.PSSwagger
                         }
 
                         byteHandle.Free();
-
+                    }
+                }
+                if (strHandle.IsAllocated)
+                {
+                    unsafe
+                    {
                         char* pBase64String = (char*)strHandle.AddrOfPinnedObject();
                         for (int i = 0; i < base64size; i++)
                         {
@@ -116,7 +123,7 @@ namespace Microsoft.PowerShell.Commands.PSSwagger
         }
     }
 
-     public static class Base64Encoder
+    public static class Base64Encoder
     {
         private const byte ls6mask = 0x3F;
         private const byte ls4mask = 0x0F;
@@ -127,6 +134,7 @@ namespace Microsoft.PowerShell.Commands.PSSwagger
         private static char[] base64encoding = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
                                                  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
                                                  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/' };
+        // This is basically the whole algorithm - run the bytes through these four steps (1 step per byte), then encode the last bits and pad
         private static Func<byte?, byte?, byte>[] base64encoder =
         {
             (b1, b2) =>

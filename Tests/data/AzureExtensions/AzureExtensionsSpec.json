@@ -584,7 +584,18 @@
                 "flavor": {
                     "type": "string",
                     "description": "Flavor"
-                }
+                },
+				"test": {
+					"type": "object",
+					"properties": {
+						"a": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": {
+						"type": "string"
+					}
+				}
             }
         },
         "VirtualMachine": {

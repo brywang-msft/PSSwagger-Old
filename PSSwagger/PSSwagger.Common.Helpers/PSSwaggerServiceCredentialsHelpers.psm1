@@ -1,4 +1,4 @@
-function Get-BasicAuthCredentialsInternal {
+function Get-PSBasicAuthCredentialsInternal {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$false)]
@@ -10,17 +10,23 @@ function Get-BasicAuthCredentialsInternal {
         $Credential = Get-Credential
     }
 
+    $typeName = ''
+    $argList = $null
     if(('Microsoft.PowerShell.Commands.PSSwagger.PSBasicAuthenticationEx' -as [Type]))
     {
         # If the Extended type exists, use it
-        New-Object -TypeName 'Microsoft.PowerShell.Commands.PSSwagger.PSBasicAuthenticationEx' -ArgumentList $Credential.UserName,$Credential.Password
+        $typeName = 'Microsoft.PowerShell.Commands.PSSwagger.PSBasicAuthenticationEx'
+        $argList = $Credential.UserName,$Credential.Password
     } else {
         # Otherwise this version should exist
-        New-Object -TypeName 'Microsoft.PowerShell.Commands.PSSwagger.PSBasicAuthentication' -ArgumentList $Credential.UserName,$Credential.Password
+        $typeName = 'Microsoft.PowerShell.Commands.PSSwagger.PSBasicAuthentication'
+        $argList = $Credential.UserName,$Credential.Password
     }
+
+    New-Object -TypeName $typeName -ArgumentList $argList
 }
 
-function Get-ApiKeyCredentialsInternal {
+function Get-PSApiKeyCredentialsInternal {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)]
@@ -39,7 +45,7 @@ function Get-ApiKeyCredentialsInternal {
     New-Object -TypeName 'Microsoft.PowerShell.Commands.PSSwagger.PSApiKeyAuthentication' -ArgumentList $APIKey,$In,$Name
 }
 
-function Get-EmptyAuthCredentialsInternal {
+function Get-PSEmptyAuthCredentialsInternal {
     [CmdletBinding()]
     param()
 

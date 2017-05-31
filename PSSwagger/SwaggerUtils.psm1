@@ -131,7 +131,7 @@ function ConvertTo-SwaggerDictionary {
 
     $swaggerDict['Parameters'] = $swaggerParameters
     $swaggerDict['Definitions'] = $swaggerDefinitions
-    $swaggerDict['Paths'] = $swaggerPaths
+    #$swaggerDict['Paths'] = $swaggerPaths
 
     return $swaggerDict
 }
@@ -943,8 +943,10 @@ function Get-ParamType
     if ($ReferenceTypeName) {
         $ReferencedDefinitionDetails = @{}
         if($DefinitionFunctionsDetails.ContainsKey($ReferenceTypeName)) {
+            Write-Host "Retrieved $ReferenceTypeName from DefinitionFunctionsDetails" -BackgroundColor DarkCyan
             $ReferencedDefinitionDetails = $DefinitionFunctionsDetails[$ReferenceTypeName]
         }
+        Write-Host "Set UsedAsPathOperationInputType to true" -BackgroundColor DarkCyan
         $ReferencedDefinitionDetails['UsedAsPathOperationInputType'] = $true
     }
 
@@ -1523,15 +1525,8 @@ function Get-Response
     
     return $responseBody, $outputType
 }
-
-function Get-CSharpModelName
+function Get-CSharpCodeNamer
 {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]
-        $Name
-    )
-
     if (-not $script:CSharpCodeNamerLoadAttempted) {
         $script:CSharpCodeNamerLoadAttempted = $true
         $script:CSharpCodeNamer = New-ObjectFromDependency -TypeNames @('AutoRest.CSharp.CodeNamerCs', 'AutoRest.CSharp.CSharpCodeNamer') -AssemblyName 'AutoRest.CSharp.dll' -AssemblyResolver {
@@ -1559,9 +1554,20 @@ function Get-CSharpModelName
         }
     }
 
-    if($script:CSharpCodeNamer)
+    return $script:CSharpCodeNamer
+}
+function Get-CSharpModelName
+{
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]
+        $Name
+    )
+    
+    $codeNamer = Get-CSharpCodeNamer
+    if($codeNamer)
     {
-        return $script:CSharpCodeNamer.GetTypeName($Name)
+        return $codeNamer.GetTypeName($Name)
     }
     else
     {

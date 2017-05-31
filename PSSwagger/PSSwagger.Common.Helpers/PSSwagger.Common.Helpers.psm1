@@ -1426,11 +1426,6 @@ function Initialize-PSSwaggerUtilities {
     {
         # This is for re-import scenario.
         $PSSwaggerJobAssemblyPath = [Microsoft.PowerShell.Commands.PSSwagger.PSSwaggerJob].Assembly.Location
-        if(('Microsoft.PowerShell.Commands.PSSwagger.PSBasicAuthenticationEx' -as [Type]) -and
-        (Test-Path -Path [Microsoft.PowerShell.Commands.PSSwagger.PSBasicAuthenticationEx].Assembly.Location -PathType Leaf))
-        {
-            $PSSwaggerJobAssemblyUnsafePath = [Microsoft.PowerShell.Commands.PSSwagger.PSBasicAuthenticationEx].Assembly.Location
-        }
     }
     else
     {
@@ -1579,7 +1574,7 @@ function Initialize-PSSwaggerUtilities {
             $TempPath = Join-Path -Path (Get-XDGDirectory -DirectoryType Data) -ChildPath ([System.IO.Path]::GetRandomFileName())
             $null = New-Item -Path $TempPath -ItemType Directory -Force
                 
-            # Compile the main utility assembly
+            # Compile the unsafe utility assembly
             $PSSwaggerJobAssemblyUnsafePath = Join-Path -Path $TempPath -ChildPath 'Microsoft.PowerShell.PSSwagger.Utility.Unsafe.dll'
             $compilerParameters.OutputAssembly = $PSSwaggerJobAssemblyUnsafePath
             
@@ -1673,7 +1668,7 @@ function Unregister-PSSwaggerClientTracing {
     Unregister-PSSwaggerClientTracingInternal -TracerObject $TracerObject
 }
 
-function Get-BasicAuthCredentials {
+function Get-PSBasicAuthCredentials {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$false)]
@@ -1681,10 +1676,10 @@ function Get-BasicAuthCredentials {
         $Credential
     )
 
-    Get-BasicAuthCredentialsInternal -Credential $Credential
+    Get-PSBasicAuthCredentialsInternal -Credential $Credential
 }
 
-function Get-ApiKeyCredentials {
+function Get-PSApiKeyCredentials {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)]
@@ -1700,12 +1695,12 @@ function Get-ApiKeyCredentials {
         $Name
     )
 
-    Get-ApiKeyCredentialsInternal -APIKey $APIKey -In $In -Name $Name
+    Get-PSApiKeyCredentialsInternal -APIKey $APIKey -In $In -Name $Name
 }
 
-function Get-EmptyAuthCredentials {
+function Get-PSEmptyAuthCredentials {
     [CmdletBinding()]
     param()
 
-    Get-EmptyAuthCredentialsInternal
+    Get-PSEmptyAuthCredentialsInternal
 }

@@ -55,6 +55,7 @@ function Get-SwaggerSpecDefinitionInfo
        $JsonDefinitionItemObject.Value.'AllOf')
     {
        $JsonDefinitionItemObject.Value.'AllOf' | ForEach-Object {
+           
             if(Get-Member -InputObject $_ -Name '$ref')
             {
                 $AllOfRefFullName = $_.'$ref'
@@ -73,6 +74,7 @@ function Get-SwaggerSpecDefinitionInfo
                 $DefinitionFunctionsDetails[$AllOfRefName] = $ReferencedFunctionDetails
             } elseif ((Get-Member -InputObject $_ -Name 'type') -and $_.type -eq 'object') {
                 # Create an anonymous type for objects defined inline
+                Write-Host "$($_ | Out-String)" -BackgroundColor DarkGreen
                 $anonObjName = Get-CSharpModelName -Name ([Guid]::NewGuid().Guid)
                 [PSCustomObject]$obj = New-Object -TypeName PsObject
                 Add-Member -InputObject $obj -MemberType NoteProperty -Name 'Name' -Value $anonObjName
@@ -459,6 +461,92 @@ function New-SwaggerDefinitionCommand
         $Models
     )
 
+    if ($global:TestNew) {
+        New-SwaggerDefinitionCommandNew -DefinitionFunctionsDetails $global:NewDefinitionFunctionsDetails -SwaggerMetaDict $SwaggerMetaDict -NameSpace $NameSpace -Models $Models
+    } else {
+        New-SwaggerDefinitionCommandOriginal @PSBoundParameters
+    }
+}
+function New-SwaggerDefinitionCommandNew
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [hashtable]
+        $DefinitionFunctionsDetails,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable]
+        $SwaggerMetaDict,
+
+        [Parameter(Mandatory = $true)]
+        [string]
+        $NameSpace,
+
+        [Parameter(Mandatory = $true)]
+        [string]
+        $Models
+    )
+
+    Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
+
+    $FunctionsToExport = @()
+    $GeneratedCommandsPath = Join-Path -Path $SwaggerMetaDict['outputDirectory'] -ChildPath $GeneratedCommandsName
+    $SwaggerDefinitionCommandsPath = Join-Path -Path $GeneratedCommandsPath -ChildPath 'SwaggerDefinitionCommands'
+    $FormatFilesPath = Join-Path -Path $GeneratedCommandsPath -ChildPath 'FormatFiles'
+
+    $DefinitionFunctionsDetails.GetEnumerator() | ForEach-Object {
+        $FunctionDetails = $_.Value
+        if ($FunctionDetails.ContainsKey('UsedAsPathOperationInputType') -and $FunctionDetails.UsedAsPathOperationInputType) {
+            Set-GenerateDefinitionCmdlet -DefinitionFunctionsDetails $DefinitionFunctionsDetails -FunctionDetails $FunctionDetails -ModelsNamespaceWithDot "$Namespace.$Models."
+        }
+    }
+
+    $DefinitionFunctionsDetails.GetEnumerator() | ForEach-Object {        
+        $FunctionDetails = $_.Value
+        # Denifitions defined as x_ms_client_flatten are not used as an object anywhere. 
+        # Also AutoRest doesn't generate a Model class for the definitions declared as x_ms_client_flatten for other definitions.
+        Write-Host "Procssing definition: $($FunctionDetails | Out-String)" -BackgroundColor DarkCyan
+        if((-not $FunctionDetails.IsUsedAs_x_ms_client_flatten) -and $FunctionDetails.IsModel)
+        {
+            if ($FunctionDetails.ContainsKey('GenerateDefinitionCmdlet') -and ($FunctionDetails['GenerateDefinitionCmdlet'] -eq $true)) {
+                $FunctionsToExport += New-SwaggerSpecDefinitionCommand -FunctionDetails $FunctionDetails `
+                                                                    -GeneratedCommandsPath $SwaggerDefinitionCommandsPath `
+                                                                    -ModelsNamespace "$Namespace.$Models"
+            }
+
+            New-SwaggerDefinitionFormatFile -FunctionDetails $FunctionDetails `
+                                            -FormatFilesPath $FormatFilesPath `
+                                            -Namespace $NameSpace `
+                                            -Models $Models
+        }
+    }
+
+    return $FunctionsToExport
+}
+function New-SwaggerDefinitionCommandOriginal
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [hashtable]
+        $DefinitionFunctionsDetails,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable]
+        $SwaggerMetaDict,
+
+        [Parameter(Mandatory = $true)]
+        [string]
+        $NameSpace,
+
+        [Parameter(Mandatory = $true)]
+        [string]
+        $Models
+    )
+
     Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState
 
     $FunctionsToExport = @()
@@ -553,6 +641,7 @@ function New-SwaggerDefinitionCommand
 
     $DefinitionFunctionsDetails.GetEnumerator() | ForEach-Object {        
         $FunctionDetails = $_.Value
+        Write-Host "Procssing definition: $($FunctionDetails | Out-String)" -BackgroundColor DarkCyan
         # Denifitions defined as x_ms_client_flatten are not used as an object anywhere. 
         # Also AutoRest doesn't generate a Model class for the definitions declared as x_ms_client_flatten for other definitions.
         if((-not $FunctionDetails.IsUsedAs_x_ms_client_flatten) -and $FunctionDetails.IsModel)

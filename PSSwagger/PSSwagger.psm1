@@ -126,9 +126,28 @@ function New-PSSwaggerModule
 
         [Parameter()]
         [string]
-        $TempMetadataFile
+        $TempMetadataFile,
+
+        [switch]
+        $New
     )
 
+    $global:TestNew = $New
+    Add-Type -Path "C:\Users\brywang\Documents\Visual Studio 2015\Projects\OpenAPI.NET.Parser\OpenAPI.NET.AutoRestExtensions\bin\Debug\Newtonsoft.Json.dll"
+    Add-Type -Path "C:\Users\brywang\Documents\Visual Studio 2015\Projects\OpenAPI.NET.Parser\OpenAPI.NET.AutoRestExtensions\bin\Debug\OpenAPI.NET.Parser.dll"
+    Add-Type -Path "C:\Users\brywang\Documents\Visual Studio 2015\Projects\OpenAPI.NET.Parser\OpenAPI.NET.Modeler\bin\Debug\OpenAPI.NET.Modeler.dll"
+    Add-Type -Path "C:\Users\brywang\Documents\Visual Studio 2015\Projects\OpenAPI.NET.Parser\OpenAPI.NET.AutoRestExtensions\bin\Debug\OpenAPI.NET.AutoRestExtensions.dll"
+    . "$PSScriptRoot\Objects.ps1"
+    . "$PSScriptRoot\TestModelBuilder.ps1"
+    . "$PSScriptRoot\InfoBuilder.ps1"
+
+    $parser = New-Object -TypeName OpenAPI.NET.Parser.JsonParser
+    $parser.AddExtension("x-ms-code-generation-settings", [OpenAPI.NET.AutoRestExtensions.CodeGenerationSettings])
+    $parser.AddExtension("x-ms-enum", [OpenAPI.NET.AutoRestExtensions.Enum])
+    $parser.AddExtension("x-ms-pageable", [OpenAPI.NET.AutoRestExtensions.Pageable])
+    $parser.AddExtension("x-ms-parameter-grouping", [OpenAPI.NET.AutoRestExtensions.ParameterGrouping])
+    $content = Get-Content $SwaggerSpecPath
+    $spec = $parser.Parse($content, [OpenAPI.NET.Parser.v2.DocumentRoot])
     $tempMetadata = [PSCustomObject]@{}
     if ($TempMetadataFile -and (Test-Path -Path $TempMetadataFile)) {
         Write-Verbose -Message "Using temporary implementation of metadata file."
@@ -161,7 +180,6 @@ function New-PSSwaggerModule
     
     $SwaggerSpecFilePaths = @()
     $AutoRestModeler = 'Swagger'
-    
     if ($PSCmdlet.ParameterSetName -eq 'SwaggerURI')
     {
         # Ensure that if the URI is coming from github, it is getting the raw content
@@ -236,7 +254,7 @@ function New-PSSwaggerModule
         throw $LocalizedData.SwaggerSpecPathNotExist -f ($SwaggerSpecPath)
         return
     }
-
+    
     if ($PSCmdlet.ParameterSetName -eq 'SwaggerPath')
     {
         $jsonObject = ConvertFrom-Json -InputObject ((Get-Content -Path $SwaggerSpecPath) -join [Environment]::NewLine) -ErrorAction Stop
@@ -390,7 +408,35 @@ function New-PSSwaggerModule
             }
         }
     }
+    $global:NewPathFunctionDetails = @{}
+    $global:NewSwaggerDict = @{}
+    $global:NewSwaggerMetaDict = @{}
+    $global:NewDefinitionFunctionsDetails = @{}
+    $global:NewParameterGroupCache = @{}
+    $global:NewMetadataDictionary = @{
+        DefaultCommandPrefix = $DefaultCommandPrefix
+        ModuleName = $Name
+        ModuleVersion = $Version
+    }
+    $codeNamer = Get-CSharpCodeNamer
+    $testVisitor = New-Object -TypeName TestModelBuilder -ArgumentList $NewPathFunctionDetails,$NewSwaggerDict,$NewSwaggerMetaDict,$NewDefinitionFunctionsDetails,$NewParameterGroupCache,$NewMetadataDictionary,$codeNamer
+    $infoVisitor =  New-Object -TypeName TestInfoBuilder -ArgumentList $NewPathFunctionDetails,$NewSwaggerDict,$NewSwaggerMetaDict,$NewDefinitionFunctionsDetails,$NewParameterGroupCache,$NewMetadataDictionary,$codeNamer
+    $modelBuilder = New-Object -TypeName OpenAPI.NET.Modeler.ModelBuilder
+    $visitorList = New-Object -TypeName System.Collections.Generic.List[OpenAPI.NET.Modeler.SpecificationObjectVisitor]
+    $visitorList.Add($infoVisitor)
+    $visitorList.Add($testVisitor)
+    try {
+        $result = $modelBuilder.Build($spec, $visitorList)
+    }
+    catch {
+        Write-Error $_.Exception
+        throw "Build failed"
+    }
 
+    $swaggerDict | ConvertTo-Json -Depth 50 | Out-File "E:\AutoRestLatest\SwaggerDict.old.json"
+    $NewSwaggerDict | ConvertTo-Json -Depth 50 | Out-File "E:\AutoRestLatest\SwaggerDict.new.json"
+    $DefinitionFunctionsDetails | ConvertTo-Json -Depth 50 | Out-File "E:\AutoRestLatest\DefinitionFunctionsDetails.old.json"
+    $NewDefinitionFunctionsDetails | ConvertTo-Json -Depth 50 | Out-File "E:\AutoRestLatest\DefinitionFunctionsDetails.new.json"
     $codePhaseResult = ConvertTo-CsharpCode -SwaggerDict $swaggerDict `
                                             -SwaggerMetaDict $swaggerMetaDict `
                                             -PowerShellCorePath $PowerShellCorePath `
@@ -428,8 +474,103 @@ function New-PSSwaggerModule
                               -UseAzureCsharpGenerator:$UseAzureCsharpGenerator
 
     Copy-Item (Join-Path -Path "$PSScriptRoot" -ChildPath "Generated.Resources.psd1") (Join-Path -Path "$outputDirectory" -ChildPath "$Name.Resources.psd1") -Force
+    
+    Write-Verbose -Message ($LocalizedData.SuccessfullyGeneratedModule -f $Name,$outputDirectory)#>
+}
 
-    Write-Verbose -Message ($LocalizedData.SuccessfullyGeneratedModule -f $Name,$outputDirectory)
+function Compare-Objects
+{
+    [CmdletBinding()]
+    param(
+        $d1,
+        $d2
+    )
+    $results = @()
+    if ($d1 -eq $null)
+    {
+        $d1str = Get-EntryAsString -obj $d1
+        $d2str = Get-EntryAsString -obj $d2
+        if ($d1str -ne $d2str)
+        {
+            $results += "Values not equal"
+            $results += "Old: $d1str"
+            $results += "New: $d2str"
+        }
+    } elseif ($d1.GetType() -ne $d2.GetType())
+    {
+        $results += "Type of object1 '$($d1.GetType() | Out-String)' does not equal type of object2 '$($d2.GetType() | Out-String)"
+    } elseif ($d1.GetType() -eq [System.Collections.Hashtable])
+    {
+        foreach ($kvp in ($d1.GetEnumerator() | Sort-Object -Property Key))
+        {
+            if ($d2.ContainsKey($kvp.Key))
+            {
+                $r = Compare-Objects -d1 $kvp.Value -d2 $d2[$kvp.Key]
+                if ($r -and ($r.Length -gt 0))
+                {
+                    $results += "Value in old does not match new. Key: $($kvp.key). Result: $($results | Out-String)"
+                }
+            } else {
+                $results += "Key is missing in new object: $($kvp.Key)"
+            }
+        }
+    } elseif ($d1.GetType().BaseType -eq [System.Array])
+    {
+        if ($d1.Length -ne $d2.Length)
+        {
+            $results += "New array is different length"
+        }
+        for ($i = 0; $i -lt $d1.Length; $i++)
+        {
+            if ($d2.Length -lt $i)
+            {
+                $r = Compare-Objects -d1 $d1[$i] -d2 $d2[$i]
+                if ($r -and ($r.Length -gt 0))
+                {
+                    $results += "Index $i of old and new arrays doesn't match. Result: $($results | Out-String)"
+                }
+            }
+        }
+    } else {
+        $d1str = Get-EntryAsString -obj $d1
+        $d2str = Get-EntryAsString -obj $d2
+        if ($d1str -ne $d2str)
+        {
+            $results += "Values not equal"
+            $results += "Old: $d1str"
+            $results += "New: $d2str"
+        }
+    }
+
+    $results
+}
+function Get-EntryAsString
+{
+    [CmdletBinding()]
+    param(
+        $obj
+    )
+    $s = ""
+    if ($obj -eq $null)
+    {
+        $s = "`$null"
+    } elseif ($obj.GetType() -eq [System.Collections.Hashtable])
+    {
+        foreach ($kvp in ($obj.GetEnumerator() | Sort-Object -Property Key))
+        {
+            $s += $kvp.Key + ": " + (Get-EntryAsString -obj $kvp.Value) + [Environment]::NewLine
+        }
+    } elseif ($obj.GetType().BaseType -eq [System.Array])
+    {
+        foreach ($item in $obj)
+        {
+            $s += (Get-EntryAsString -obj $item) + [Environment]::NewLine
+        }
+    } else {
+        $s = $obj | Out-String
+    }
+
+    return $s
 }
 
 #region Module Generation Helpers
