@@ -72,11 +72,10 @@ A PowerShell module with commands to generate the PowerShell commands for a give
 
 After step 5, the module will be in `C:\Temp\GeneratedModule\Generated.AzureRM.BatchManagement ($param.Path)` folder.
 
-Before importing that module and using it, you need to import `PSSwagger.Common.Helpers` module which is under PSSwagger folder. If the module is built on Azure, import the `PSSwagger.Azure.Helpers` module as well.
+Before importing that module and using it, you need to import `PSSwagger.Common.Helpers` module which is under PSSwagger folder.
     
 ```powershell
 Import-Module .\PSSwagger\PSSwagger.Common.Helpers
-Import-Module .\PSSwagger\PSSwagger.Azure.Helpers
 Import-Module "$($param.Path)\$($param.Name)"
 Get-Command -Module $param.Name
 ```
@@ -124,7 +123,7 @@ If -Paging is not specified and the cmdlet supports paging, the cmdlet will auto
 # Silent execution when missing dependency packages
 When dependency packages are expected to be missing, silent execution (bypassing the missing packages prompt) can be achieved by calling:
 ```powershell
-PSSwagger.Azure.Helpers\Initialize-PSSwaggerDependencies -AcceptBootstrap
+PSSwagger.Common.Helpers\Initialize-PSSwaggerDependencies -AcceptBootstrap -Azure
 ```
 For Microsoft Azure modules, or:
 ```powershell

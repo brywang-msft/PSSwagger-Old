@@ -110,6 +110,7 @@ $AsJobParameterString = @'
 
 
 $advFnSignatureForPath = @'
+Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath "GeneratedHelpers.psm1")
 <#
 $commandHelp
 $paramHelp
@@ -122,7 +123,7 @@ function $commandName
 
     Begin 
     {
-	    $helperModule\Initialize-PSSwaggerDependencies
+	    $dependencyInitFunction
 	}
 
     Process {

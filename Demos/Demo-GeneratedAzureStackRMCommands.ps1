@@ -41,7 +41,6 @@ $param = @{
 New-PSSwaggerModule @param
 
 Import-Module "$PSSwaggerClonePath\PSSwagger\PSSwagger.Common.Helpers\PSSwagger.Common.Helpers.psd1" -verbose -force
-Import-Module "$PSSwaggerClonePath\PSSwagger\PSSwagger.Azure.Helpers\PSSwagger.Azure.Helpers.psd1" -verbose -force
 Import-Module $TargetPath\$ModuleName -WarningAction SilentlyContinue
 Get-Command -Module $ModuleName
 Get-Command -Module $ModuleName -Syntax

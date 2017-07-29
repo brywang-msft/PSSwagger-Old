@@ -62,7 +62,6 @@ New-PSSwaggerModule @param
 
 #region initialization
 Import-Module "$PSSwaggerClonePath\PSSwagger\PSSwagger.Common.Helpers\PSSwagger.Common.Helpers.psd1" -verbose -force
-Import-Module "$PSSwaggerClonePath\PSSwagger\PSSwagger.Azure.Helpers\PSSwagger.Azure.Helpers.psd1" -verbose -force
 Import-Module $TargetPath\Generated.AzureRM.Resources -WarningAction SilentlyContinue
 Import-Module $TargetPath\Generated.AzureRM.Storage -WarningAction SilentlyContinue
 Import-Module $TargetPath\Generated.AzureRM.Network -WarningAction SilentlyContinue

@@ -21,8 +21,6 @@ Describe "Basic API" -Tag ScenarioTest {
         Write-Verbose "Importing modules"
         Import-Module (Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "PSSwagger" | Join-Path -ChildPath "PSSwagger.Common.Helpers" | `
                        Join-Path -ChildPath "PSSwagger.Common.Helpers.psd1") -Force
-        Import-Module (Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "PSSwagger" | Join-Path -ChildPath "PSSwagger.Azure.Helpers" | `
-                       Join-Path -ChildPath "PSSwagger.Azure.Helpers.psd1") -Force
         Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "Generated" | `
                        Join-Path -ChildPath "Generated.Basic.Module")
         $processes = Start-JsonServer -TestRootPath $PSScriptRoot -TestApiName "PsSwaggerTestBasic" -TestRoutesFileName "PsSwaggerTestBasicRoutes.json" -Verbose
@@ -72,8 +70,6 @@ Describe "All Operations: Basic" -Tag ScenarioTest {
         Write-Verbose "Importing modules"
         Import-Module (Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "PSSwagger" | Join-Path -ChildPath "PSSwagger.Common.Helpers" | `
                        Join-Path -ChildPath "PSSwagger.Common.Helpers.psd1") -Force
-        Import-Module (Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "PSSwagger" | Join-Path -ChildPath "PSSwagger.Azure.Helpers" | `
-                       Join-Path -ChildPath "PSSwagger.Azure.Helpers.psd1") -Force
         Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "Generated" | `
                        Join-Path -ChildPath "Generated.TypesTest.Module")
         
@@ -153,8 +149,6 @@ Describe "Get/List tests" -Tag ScenarioTest {
         Write-Verbose "Importing modules"
         Import-Module (Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "PSSwagger" | Join-Path -ChildPath "PSSwagger.Common.Helpers" | `
                        Join-Path -ChildPath "PSSwagger.Common.Helpers.psd1") -Force
-        Import-Module (Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "PSSwagger" | Join-Path -ChildPath "PSSwagger.Azure.Helpers" | `
-                       Join-Path -ChildPath "PSSwagger.Azure.Helpers.psd1") -Force
         Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "Generated" | `
                        Join-Path -ChildPath "Generated.GetList.Module")
 
@@ -200,9 +194,6 @@ Describe "Optional parameter tests" -Tag ScenarioTest {
         Write-Verbose "Importing modules"
         Import-Module (Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "PSSwagger" | Join-Path -ChildPath "PSSwagger.Common.Helpers" | `
                        Join-Path -ChildPath "PSSwagger.Common.Helpers.psd1") -Force
-        
-        Import-Module (Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "PSSwagger" | Join-Path -ChildPath "PSSwagger.Azure.Helpers" | `
-                       Join-Path -ChildPath "PSSwagger.Azure.Helpers.psd1") -Force
         Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "Generated" | `
                        Join-Path -ChildPath "Generated.Optional.Module")
         $processes = Start-JsonServer -TestRootPath $PSScriptRoot -TestApiName "OptionalParametersTests" -TestRoutesFileName "OptionalParametersTestsRoutes.json"
@@ -264,8 +255,6 @@ Describe "ParameterTypes tests" -Tag @('ParameterTypes','ScenarioTest') {
         Write-Verbose "Importing modules"
         Import-Module (Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "PSSwagger" | Join-Path -ChildPath "PSSwagger.Common.Helpers" | `
                        Join-Path -ChildPath "PSSwagger.Common.Helpers.psd1") -Force
-        Import-Module (Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "PSSwagger" | Join-Path -ChildPath "PSSwagger.Azure.Helpers" | `
-                       Join-Path -ChildPath "PSSwagger.Azure.Helpers.psd1") -Force
         Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "Generated" | `
                        Join-Path -ChildPath "Generated.ParamTypes.Module")
 
@@ -417,8 +406,6 @@ Describe "AzureExtensions" {
         Write-Verbose "Importing modules"
         Import-Module (Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "PSSwagger" | Join-Path -ChildPath "PSSwagger.Common.Helpers" | `
                        Join-Path -ChildPath "PSSwagger.Common.Helpers.psd1") -Force
-        Import-Module (Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "PSSwagger" | Join-Path -ChildPath "PSSwagger.Azure.Helpers" | `
-                       Join-Path -ChildPath "PSSwagger.Azure.Helpers.psd1") -Force
         Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "Generated" | `
                        Join-Path -ChildPath "Generated.AzExt.Module")
         
@@ -539,7 +526,6 @@ Describe "Composite Swagger Tests" -Tag @('Composite','ScenarioTest') {
             # Import generated module
             Write-Verbose "Importing $ModuleName module"
             Import-Module (Join-Path -Path $PsSwaggerPath -ChildPath "PSSwagger.Common.Helpers") -Force -ArgumentList $true
-            Import-Module (Join-Path -Path $PsSwaggerPath -ChildPath "PSSwagger.Azure.Helpers") -Force
             $ev = $null
             Import-Module $ModulePath -Force -ErrorVariable ev
             $ev | Should BeNullOrEmpty
@@ -578,8 +564,6 @@ Describe "AllOfDefinition" -Tag @('AllOf','ScenarioTest')  {
         Write-Verbose "Importing modules"
         Import-Module (Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "PSSwagger" | Join-Path -ChildPath "PSSwagger.Common.Helpers" | `
                        Join-Path -ChildPath "PSSwagger.Common.Helpers.psd1") -Force
-        Import-Module (Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "PSSwagger" | Join-Path -ChildPath "PSSwagger.Azure.Helpers" | `
-                       Join-Path -ChildPath "PSSwagger.Azure.Helpers.psd1") -Force
         Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "Generated" | `
                        Join-Path -ChildPath "Generated.AllOfDefinition.Module")
     }

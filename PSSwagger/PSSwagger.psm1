@@ -496,6 +496,7 @@ function New-PSSwaggerModule
                               -UseAzureCsharpGenerator:$UseAzureCsharpGenerator
 
     Copy-Item (Join-Path -Path "$PSScriptRoot" -ChildPath "Generated.Resources.psd1") (Join-Path -Path "$outputDirectory" -ChildPath "$Name.Resources.psd1") -Force
+    Copy-Item (Join-Path -Path "$PSScriptRoot" -ChildPath "GeneratedHelpers.psm1") (Join-Path -Path "$outputDirectory" -ChildPath "GeneratedHelpers.psm1") -Force
 
     Write-Verbose -Message ($LocalizedData.SuccessfullyGeneratedModule -f $Name,$outputDirectory)
 }
@@ -796,10 +797,6 @@ function New-ModuleManifestUtility
         RootModule = "$($Info.ModuleName).psm1"
         FormatsToProcess = $FormatsToProcess
         FunctionsToExport = $FunctionsToExport
-    }
-
-    if ($UseAzureCsharpGenerator) {
-        $NewModuleManifest_params.RequiredModules += 'PSSwagger.Azure.Helpers'
     }
 
     if($Info.DefaultCommandPrefix)

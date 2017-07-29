@@ -965,9 +965,9 @@ function New-SwaggerPath
     $outputTypeBlock = $bodyObject.OutputTypeBlock
 
     if ($UseAzureCsharpGenerator) {
-        $helperModule = "PSSwagger.Azure.Helpers"
+        $dependencyInitFunction = "Initialize-PSSwaggerDependencies -Azure"
     } else {
-        $helperModule = "PSSwagger.Common.Helpers"
+        $dependencyInitFunction = "Initialize-PSSwaggerDependencies"
     }
     
     $CommandString = $executionContext.InvokeCommand.ExpandString($advFnSignatureForPath)
