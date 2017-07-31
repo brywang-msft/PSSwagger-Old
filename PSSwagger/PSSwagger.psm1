@@ -329,7 +329,7 @@ function New-PSSwaggerModule
         $frameworksToCheckDependencies += 'netstandard1'
     }
 
-    $userConsent = Initialize-PSSwaggerLocalTools -AllUsers:$InstallToolsForAllUsers -Azure:$UseAzureCsharpGenerator -Framework $frameworksToCheckDependencies -AcceptBootstrap:$ConfirmBootstrap
+    $userConsent = Initialize-PSSwaggerLocalTool -AllUsers:$InstallToolsForAllUsers -Azure:$UseAzureCsharpGenerator -Framework $frameworksToCheckDependencies -AcceptBootstrap:$ConfirmBootstrap
 
     $DefinitionFunctionsDetails = @{}
     $PowerShellCodeGen = @{
@@ -483,6 +483,20 @@ function New-PSSwaggerModule
                                                        -Models $models
 
     $RootModuleFilePath = Join-Path $outputDirectory "$Name.psm1"
+    $testAzureModule = ''
+    $testCoreModuleRequirements = ''
+    $testFullModuleRequirements = ''
+    if ($UseAzureCSharpGenerator) {
+        $testCoreModuleRequirements = '$requiredAzureModule = "AzureRM.Profile.NetCore.Preview"' + [Environment]::NewLine + "    "
+        $testFullModuleRequirements = '$requiredAzureModule = "AzureRM.Profile"' + [Environment]::NewLine + "    "
+        $testAzureModule = @'
+if (-not (Get-Module $requiredAzureModule -ListAvailable)) {
+    throw ($LocalizedData.MissingModule -f ($requiredAzureModule))
+}
+Import-Module $requiredAzureModule
+'@
+    }
+
     Out-File -FilePath $RootModuleFilePath `
              -InputObject $ExecutionContext.InvokeCommand.ExpandString($RootModuleContents)`
              -Encoding ascii `
@@ -797,6 +811,13 @@ function New-ModuleManifestUtility
         RootModule = "$($Info.ModuleName).psm1"
         FormatsToProcess = $FormatsToProcess
         FunctionsToExport = $FunctionsToExport
+    }
+
+    if ($UseAzureCsharpGenerator) {
+        $NewModuleManifest_params['PrivateData'] = @{
+            'RequiredAzureModuleCore' = 'AzureRM.Profile.NetCore.Preview'
+            'RequiredAzureModuleFull' = 'AzureRM.Profile'
+        }
     }
 
     if($Info.DefaultCommandPrefix)
