@@ -1,22 +1,22 @@
 @{
-    RootModule = 'PSSwagger.LiveTestFramework.psm1'
-    ModuleVersion = '9.9.9'
-    GUID = '026fa119-121b-4816-9556-5a306bebb963'
+    RootModule = 'PSSwagger.LiveTestFramework.Build.psm1'
+    ModuleVersion = '0.0.1'
+    GUID = '03459d8d-5fcc-48e1-9a88-94f7971e0335'
     Author = 'Microsoft Corporation'
     CompanyName = 'Microsoft Corporation'
     Copyright = '(c) Microsoft Corporation. All rights reserved.'
-    Description = 'PowerShell module with commands for generating or manipulating PSSwagger.LiveTestFramework binaries.'
-    PowerShellVersion = '5.0'
-    FunctionsToExport = @('Start-PSSwaggerLiveTestServer','Add-PSSwaggerLiveTestLibType','Add-PSSwaggerLiveTestServerType')
+    Description = 'PowerShell module with commands for building the PSSwagger.LiveTestFramework package.'
+    PowerShellVersion = '5.1'
+    FunctionsToExport = @('Initialize-Dependencies','Invoke-Build','Build-DotNetProject','Invoke-Packaging')
     CmdletsToExport = ''
     VariablesToExport = ''
     AliasesToExport = ''
-    RequiredModules = @('PSSwaggerUtility')
+    RequiredModules = @()
     NestedModules = @()
-
+	DefaultCommandPrefix = 'LTFBuild'
     FileList = @(
-        'PSSwagger.LiveTestFramework.psd1',
-        'PSSwagger.LiveTestFramework.psm1'
+        'PSSwagger.LiveTestFramework.Build.psd1',
+        'PSSwagger.LiveTestFramework.Build.psm1'
     )
 
     PrivateData = @{
